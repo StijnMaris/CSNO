@@ -94,7 +94,7 @@ void ACSNOCharacter::BeginPlay() {
     // Call the base class  
     Super::BeginPlay();
 
-    //HealthComponent->OnHealthChanged.AddDynamic(this, &ACSNOCharacter::OnHealthChanged);
+    HealthComponent->OnHealthChanged.AddUniqueDynamic(this, &ACSNOCharacter::OnHealthChanged);
     HealthComponent->OnDied.AddUniqueDynamic(this, &ACSNOCharacter::OnDied);
     //OnPlantedBomb.AddUniqueDynamic(this, &ACSNOCharacter::BombPlanted);
 }
@@ -246,6 +246,8 @@ void ACSNOCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 
 void ACSNOCharacter::OnHealthChanged(UCSNOHealthComponent* HealthComp, float Health, float HealthDelta,
                                      const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser) {
+    UE_LOG(LogTemp, Log, TEXT("Health Changed: %s (%s)"), *FString::SanitizeFloat(Health),
+           *FString::SanitizeFloat(HealthDelta));
 }
 
 void ACSNOCharacter::OnDied(bool bIsDead, AActor* VictimActor, AActor* KillerActor, AController* KillerController) {

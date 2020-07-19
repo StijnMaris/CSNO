@@ -65,12 +65,12 @@ private:
     UPROPERTY(EditAnywhere, Category = "HealthComponent")
     float MaxHealth;
 
-    UPROPERTY(Replicated, VisibleAnywhere, Category = "HealthComponent")
+    UPROPERTY(ReplicatedUsing = OnRep_IsDead, VisibleAnywhere, Category = "HealthComponent")
     bool bIsDead;
 
     UPROPERTY(Replicated, VisibleAnywhere, Category = "HealthComponent")
     AActor* Killer;
 
-    UPROPERTY(ReplicatedUsing = OnRep_IsDead, VisibleAnywhere, Category = "HealthComponent")
+    UPROPERTY(Replicated , VisibleAnywhere, Category = "HealthComponent")
     AController* KillerController;
 };
