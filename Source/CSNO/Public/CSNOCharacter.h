@@ -112,7 +112,7 @@ protected:
                          const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
     UFUNCTION()
-    void OnDied(bool bIsDead, AActor* VictimActor, AActor* KillerActor, AController* KillerController);
+    void OnDied(bool bIsDead, AActor* VictimActor, AActor* KillerActor, APlayerState* KillerPlayerState);
 
     UFUNCTION(reliable, server, WithValidation)
     void ServerSetWalking(bool bNewWalking);

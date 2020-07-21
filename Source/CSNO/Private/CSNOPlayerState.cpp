@@ -158,15 +158,15 @@ void ACSNOPlayerState::ScorePoints(int Points) {
     SetScore(GetScore() + Points);
 }
 
-void ACSNOPlayerState::OnDied(bool bIsDead, AActor* VictimActor, AActor* KillerActor, AController* KillerController) {
+void ACSNOPlayerState::OnDied(bool bIsDead, AActor* VictimActor, AActor* KillerActor, APlayerState* KillerPlayerState) {
     UE_LOG(LogTemp, Log, TEXT("Playerstate: Died delegate"));
-    if (KillerController) {
-        ACSNOPlayerState* PS = KillerController->GetPlayerState<ACSNOPlayerState>();
-        if (PS) {
-            PS->ScoreKill(this, 1);
-            this->ScoreDeath(PS, 0);
-        }
+
+    ACSNOPlayerState* PS = Cast<ACSNOPlayerState>(KillerPlayerState);
+    if (PS) {
+        PS->ScoreKill(this, 1);
+        this->ScoreDeath(PS, 0);
     }
+
 }
 
 void ACSNOPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {

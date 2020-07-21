@@ -87,5 +87,5 @@ protected:
     void ScorePoints(int Points);
 
     UFUNCTION()
-    void OnDied(bool bIsDead, AActor* VictimActor, AActor* KillerActor, AController* KillerController);
+    void OnDied(bool bIsDead, AActor* VictimActor, AActor* KillerActor, APlayerState* KillerPlayerState);
 };

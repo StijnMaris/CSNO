@@ -3,6 +3,7 @@
 #include "CSNOHealthComponent.h"
 
 #include "CSNOArmourComponent.h"
+#include "CSNOPlayerState.h"
 #include "Net/UnrealNetwork.h"
 #include "CSNOWeaponBase.h"
 #include "CSNO/Public/CSNODefaultDamageType.h"
@@ -98,8 +99,8 @@ void UCSNOHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damag
     bIsDead = Health <= 0.f;
     if (bIsDead) {
         Killer = DamageCauser;
-        KillerController = InstigatedBy;
-        OnDied.Broadcast(bIsDead, GetOwner(), Killer, KillerController);
+        KillerPlayerState = InstigatedBy->GetPlayerState<ACSNOPlayerState>();
+        PlayerDied(bIsDead, GetOwner(), Killer, KillerPlayerState);
     }
 
     OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
@@ -110,15 +111,16 @@ void UCSNOHealthComponent::OnRep_Health(float OldHealth) {
     OnHealthChanged.Broadcast(this, Health, Damage, nullptr, nullptr, nullptr);
 }
 
-void UCSNOHealthComponent::OnRep_IsDead() {
-    OnDied.Broadcast(bIsDead, GetOwner(), Killer, KillerController);
+void UCSNOHealthComponent::PlayerDied_Implementation(bool bIsPlayerDead, AActor* VictimActor, AActor* KillerActor,
+                                                     APlayerState* KillerPS) {
+    OnDied.Broadcast(bIsPlayerDead, VictimActor, KillerActor, KillerPS);
 }
 
 void UCSNOHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(UCSNOHealthComponent, Health)
-    DOREPLIFETIME(UCSNOHealthComponent, bIsDead)
-    DOREPLIFETIME(UCSNOHealthComponent, Killer)
-    DOREPLIFETIME(UCSNOHealthComponent, KillerController)
+    DOREPLIFETIME(UCSNOHealthComponent, Health);
+    DOREPLIFETIME(UCSNOHealthComponent, bIsDead);
+    DOREPLIFETIME(UCSNOHealthComponent, Killer);
+    DOREPLIFETIME(UCSNOHealthComponent, KillerPlayerState);
 }

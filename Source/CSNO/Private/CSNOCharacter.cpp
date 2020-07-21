@@ -250,7 +250,7 @@ void ACSNOCharacter::OnHealthChanged(UCSNOHealthComponent* HealthComp, float Hea
            *FString::SanitizeFloat(HealthDelta));
 }
 
-void ACSNOCharacter::OnDied(bool bIsDead, AActor* VictimActor, AActor* KillerActor, AController* KillerController) {
+void ACSNOCharacter::OnDied(bool bIsDead, AActor* VictimActor, AActor* KillerActor, APlayerState* KillerPlayerState) {
     GetMovementComponent()->StopMovementImmediately();
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     GetMesh()->SetSimulatePhysics(true);

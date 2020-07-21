@@ -11,7 +11,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangedSignature, UCSNOHea
                                              class AController*, InstigatedBy, AActor*, DamageCauser);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnDiedSignature, bool, bIsDead, AActor*, VictimActor, AActor*,
-                                              KillerActor, AController*, KillerController);
+                                              KillerActor, APlayerState*, KillerPlayerState);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CSNO_API UCSNOHealthComponent : public UActorComponent {
@@ -54,9 +54,6 @@ protected:
     UFUNCTION()
     void OnRep_Health(float OldHealth);
 
-    UFUNCTION()
-    void OnRep_IsDead();
-
 private:
     //var
     UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "HealthComponent")
@@ -65,12 +62,15 @@ private:
     UPROPERTY(EditAnywhere, Category = "HealthComponent")
     float MaxHealth;
 
-    UPROPERTY(ReplicatedUsing = OnRep_IsDead, VisibleAnywhere, Category = "HealthComponent")
+    UPROPERTY(Replicated, VisibleAnywhere, Category = "HealthComponent")
     bool bIsDead;
 
     UPROPERTY(Replicated, VisibleAnywhere, Category = "HealthComponent")
     AActor* Killer;
 
     UPROPERTY(Replicated , VisibleAnywhere, Category = "HealthComponent")
-    AController* KillerController;
+    APlayerState* KillerPlayerState;
+
+    UFUNCTION(NetMulticast, Unreliable)
+    void PlayerDied(bool bIsPlayerDead, AActor* VictimActor, AActor* KillerActor, APlayerState* KillerPS);
 };
