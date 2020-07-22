@@ -127,7 +127,7 @@ void ACSNOLineTraceWeapon::PlayFireEffect(USkeletalMeshComponent* SkelMeshComp, 
 
 void ACSNOLineTraceWeapon::PlayImpactEffect(EPhysicalSurface SurfaceType, FVector ImpactPoint) {
     if (CurrentImpactEffect) {
-        FVector MuzzleLocation(FVector::ZeroVector);
+        FVector MuzzleLocation;
         if (HasAuthority()) {
             MuzzleLocation = TPMeshComp->GetSocketLocation(MuzzleSocketName);
         }
