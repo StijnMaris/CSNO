@@ -15,196 +15,180 @@ class UNiagaraSystem;
 class USoundBase;
 class UCurveVector;
 
-USTRUCT()
-struct FHitScanTrace {
-    GENERATED_BODY()
-
-public:
-    UPROPERTY()
-    TEnumAsByte<EPhysicalSurface> SurfaceType;
-
-    UPROPERTY()
-    FVector_NetQuantize TraceEnd;
-};
-
 USTRUCT(BlueprintType)
 struct FWeaponInfo : public FTableRowBase {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    UPROPERTY(EditDefaultsOnly, Category = "Character")
-    TSubclassOf<ACSNOWeaponBase> WeaponClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Character")
+	TSubclassOf<ACSNOWeaponBase> WeaponClass;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    int MaxClipAmmo;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	bool bHasAutomaticFire;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    int MaxTotalAmmo;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	int MaxClipAmmo;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    float RateOfFire;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	int MaxTotalAmmo;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    float BaseDamage;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float RateOfFire;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    float ArmourPiercing;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float BaseDamage;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-    USkeletalMesh* GunMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float ArmourPiercing;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-    class USoundBase* ShotSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	USkeletalMesh* GunMesh;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-    class UCurveVector* RecoilCurve;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	class USoundBase* ShotSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	class UCurveVector* RecoilCurve;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UNiagaraSystem* MuzzleEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UNiagaraSystem* TracerEffect;
 };
 
-UCLASS()
+UCLASS(Abstract)
 class CSNO_API ACSNOWeaponBase : public AActor {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    // Sets default values for this actor's properties
-    ACSNOWeaponBase();
+	// Sets default values for this actor's properties
+	ACSNOWeaponBase();
 
-    void Init(FWeaponInfo& WeaponInfo, FInventoryItem& InventoryItem);
+	void Init(FWeaponInfo& WeaponInfo, FInventoryItem& InventoryItem);
 
-    // Called every frame
-    virtual void Tick(float DeltaTime) override;
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 
-    UFUNCTION(BlueprintCallable, Category = "Weapon")
-    virtual void StartFire();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual void StartFire() { }
 
-    UFUNCTION(BlueprintCallable, Category = "Weapon")
-    virtual void StopFire();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual void StopFire() { }
 
-    UFUNCTION(BlueprintCallable, Category = "Weapon")
-    void Reload();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual void Reload();
 
-    UFUNCTION(BlueprintCallable, Category = "Weapon")
-    float GetArmourPiercing();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	FORCEINLINE float GetArmourPiercing() const { return ArmourPiercing; }
 
-    UFUNCTION(BlueprintCallable, Category = "Weapon")
-    void ChangeWeapon(FWeaponInfo& WeaponInfo, FInventoryItem& InventoryItem);
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void ChangeWeapon(FWeaponInfo& WeaponInfo, FInventoryItem& InventoryItem);
 
-    UFUNCTION(BlueprintCallable, Category = "Weapon")
-    FORCEINLINE int GetCurrentClipAmmo() const { return CurrentClipAmmo; }
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	FORCEINLINE int GetCurrentClipAmmo() const { return CurrentClipAmmo; }
 
-    UFUNCTION(BlueprintCallable, Category = "Weapon")
-    FORCEINLINE int GetCurrentTotalAmmo() const { return CurrentTotalAmmo; }
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	FORCEINLINE int GetCurrentTotalAmmo() const { return CurrentTotalAmmo; }
 
-    UFUNCTION(BlueprintCallable, Category = "Weapon")
-    FORCEINLINE int GetMaxClipAmmo() const { return MaxClipAmmo; }
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	FORCEINLINE int GetMaxClipAmmo() const { return MaxClipAmmo; }
 
-    UFUNCTION(BlueprintCallable, Category = "Weapon")
-    FORCEINLINE int GetMaxTotalAmmo() const { return MaxTotalAmmo; }
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	FORCEINLINE int GetMaxTotalAmmo() const { return MaxTotalAmmo; }
 
 protected:
-    // Called when the game starts or when spawned
-    virtual void BeginPlay() override;
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    USkeletalMeshComponent* MeshComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USkeletalMeshComponent* MeshComp;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    USkeletalMeshComponent* TPMeshComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USkeletalMeshComponent* TPMeshComp;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-    TSubclassOf<UDamageType> DamageType;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	TSubclassOf<UDamageType> DamageType;
 
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-    FName MuzzleSocketName;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	FName MuzzleSocketName;
 
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-    FName TracerTargetName;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	FName TracerTargetName;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-    UNiagaraSystem* MuzzleEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UNiagaraSystem* MuzzleEffect;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-    UNiagaraSystem* DefaultImpactEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UNiagaraSystem* DefaultImpactEffect;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-    UNiagaraSystem* FleshImpactEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UNiagaraSystem* FleshImpactEffect;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-    UNiagaraSystem* TracerEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UNiagaraSystem* TracerEffect;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-    USoundBase* ShotSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	USoundBase* ShotSound;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-    UCurveVector* RecoilCurve;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UCurveVector* RecoilCurve;
 
-    // UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    // TSubclassOf<UCameraShake> FireCamShake;
+	// UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	// TSubclassOf<UCameraShake> FireCamShake;
 
-    virtual void Fire();
+	virtual void Fire() { }
 
-    UFUNCTION(Server, Reliable, WithValidation)
-    void ServerFire();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFire();
 
-    UFUNCTION(Server, Reliable, WithValidation)
-    void ServerReload();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerReload();
 
-    void PlayFireEffect(USkeletalMeshComponent* SkelMeshComp, FVector TraceEndPoint);
+	virtual void AddRecoil(class ACSNOCharacter* Player);
 
-    void PlayImpactEffect(EPhysicalSurface SurfaceType, FVector ImpactPoint);
+	UFUNCTION()
+	void OnRep_WeaponChange();
 
-    void SetVarBasedOnSurfaceType(EPhysicalSurface SurfaceType);
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float BaseDamage;
 
-    virtual void AddRecoil(class ACSNOCharacter* Player);
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	int MaxClipAmmo;
 
-    UFUNCTION()
-    void OnRep_HitScanTrace();
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	int MaxTotalAmmo;
 
-    UFUNCTION()
-    void OnRep_WeaponChange();
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float ArmourPiercing;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    float BaseDamage;
+	float StartFireTime;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    int MaxClipAmmo;
+	UPROPERTY(Replicated)
+	int CurrentClipAmmo;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    int MaxTotalAmmo;
+	UPROPERTY(Replicated)
+	int CurrentTotalAmmo;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    float ArmourPiercing;
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	float LastFireTime;
 
-    float StartFireTime;
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	float ActualDamage;
 
-    UPROPERTY(Replicated)
-    int CurrentClipAmmo;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float RateOfFire;
 
-    UPROPERTY(Replicated)
-    int CurrentTotalAmmo;
-
-    float LastFireTime;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	bool bHasAutomaticFire;
 
 private:
-    FTimerHandle TimerHandle_TimeBetweenShots;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    float RateOfFire;
+	FName CurrentWeaponName;
 
-    float TimeBetweenShots;
+	UPROPERTY(Replicated,VisibleAnywhere, Category = "Weapon")
+	FInventoryItem CurrentInventoryItem;
 
-    float ActualDamage;
-
-    FName CurrentWeaponName;
-
-    UPROPERTY(Replicated, EditDefaultsOnly, Category = "Weapon")
-    FInventoryItem CurrentInventoryItem;
-
-    UPROPERTY(ReplicatedUsing = OnRep_WeaponChange, EditDefaultsOnly, Category = "Weapon")
-    FWeaponInfo CurrentWeaponInfo;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    UNiagaraSystem* CurrentImpactEffect;
-
-    UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)
-    FHitScanTrace HitScanTrace;
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponChange, EditDefaultsOnly, Category = "Weapon")
+	FWeaponInfo CurrentWeaponInfo;
 
 };
