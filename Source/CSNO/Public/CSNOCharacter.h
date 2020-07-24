@@ -17,6 +17,15 @@ class UAnimMontage;
 class UCameraComponent;
 class ACSNODefusableBomb;
 
+UENUM(BlueprintType)
+enum class EPlayerCondition : uint8 {
+	Idle,
+	Shooting,
+	Reloading,
+	Switching_Weapon,
+	Preforming_Action
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlantedBomb, AActor*, Planter, AController*, PlanterController);
 
 UCLASS(config=Game)
@@ -32,6 +41,8 @@ public:
 	FRotator GetAimOffsets() const;
 
 	void SetWalking(bool bNewWalking);
+
+	void SetPlayerCondition(EPlayerCondition NewCondition);
 
 	/** AnimMontage to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
@@ -67,7 +78,9 @@ public:
 	UPROPERTY()
 	ACSNODefusableBomb* DefusableBomb;
 
-	//var
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	EPlayerCondition PlayerCondition;
+
 	UPROPERTY(Transient, Replicated, BlueprintReadOnly)
 	bool bWantsToWalk;
 
@@ -77,23 +90,20 @@ protected:
 	//input
 
 	void StartFire();
-
 	void StopFire();
 
 	void Reload();
+	void StopReload();
 
 	void BeginCrouch();
-
 	void EndCrouch();
 
 	void BeginWalk();
-
 	void EndWalk();
 
 	void AlternateFire();
 
 	void Action();
-
 	void StopAction();
 
 	void ChangeToInventorySlot1();
@@ -101,6 +111,8 @@ protected:
 	void ChangeToInventorySlot3();
 	void ChangeToInventorySlot4();
 	void ChangeToInventorySlot5();
+
+	void StopChangingWeapon();
 
 	/** Handles moving forward/backward */
 	void MoveForward(float Val);
@@ -121,6 +133,9 @@ protected:
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerSetWalking(bool bNewWalking);
 
+	UFUNCTION(reliable, server, WithValidation)
+    void ServerSetPlayerCondition(EPlayerCondition NewCondition);
+
 private:
 	//var
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
@@ -139,6 +154,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UCSNOInventoryComponent* InventoryComponent;
+
+	FTimerHandle TimerHandle_ReloadTime;
+
+	FTimerHandle TimerHandle_SwitchWeaponTime;
 
 	UPROPERTY()
 	bool bIsInBombPlantingSite;

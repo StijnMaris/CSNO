@@ -60,6 +60,10 @@ void ACSNOWeaponBase::Reload() {
         ServerReload();
     }
     if (CurrentClipAmmo < MaxClipAmmo) {
+        ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
+        if (Player) {
+            Player->SetPlayerCondition(EPlayerCondition::Reloading);
+        }
         if (MaxClipAmmo - CurrentClipAmmo <= CurrentTotalAmmo) {
             CurrentTotalAmmo -= MaxClipAmmo - CurrentClipAmmo;
             CurrentClipAmmo = MaxClipAmmo;
