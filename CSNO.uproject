@@ -71,7 +71,7 @@
 		},
 		{
 			"Name": "RiderLink",
-			"Enabled": false
+			"Enabled": true
 		}
 	]
 }
