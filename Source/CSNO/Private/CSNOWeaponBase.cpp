@@ -15,138 +15,163 @@
 #include "Curves/CurveVector.h"
 
 ACSNOWeaponBase::ACSNOWeaponBase() {
-    PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true;
 
-    MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
-    MeshComp->SetOnlyOwnerSee(true);
-    RootComponent = MeshComp;
+	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
+	MeshComp->SetOnlyOwnerSee(true);
+	RootComponent = MeshComp;
 
-    TPMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("TPMeshComp"));
-    TPMeshComp->SetOwnerNoSee(true);
+	TPMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("TPMeshComp"));
+	TPMeshComp->SetOwnerNoSee(true);
 
-    DamageType = UCSNODefaultDamageType::StaticClass();
+	DamageType = UCSNODefaultDamageType::StaticClass();
 
-    MuzzleSocketName = "MuzzleSocket";
-    TracerTargetName = "BeamTarget";
+	MuzzleSocketName = "MuzzleSocket";
+	TracerTargetName = "BeamTarget";
 
-    BaseDamage = 20.f;
-    RateOfFire = 600;
-    MaxTotalAmmo = 0;
-    MaxClipAmmo = 30;
-    ArmourPiercing = 0.5;
+	BaseDamage = 20.f;
+	RateOfFire = 600;
+	MaxTotalAmmo = 0;
+	MaxClipAmmo = 30;
+	ArmourPiercing = 0.5;
 
-    SetReplicates(true);
+	SetReplicates(true);
 }
 
 // Sets default values
 
 void ACSNOWeaponBase::Init(FWeaponInfo& WeaponInfo, FInventoryItem& InventoryItem) {
-    CurrentInventoryItem = InventoryItem;
-    CurrentWeaponInfo = WeaponInfo;
+	CurrentInventoryItem = InventoryItem;
+	CurrentWeaponInfo = WeaponInfo;
 
-    ChangeWeapon(CurrentWeaponInfo, InventoryItem);
+	ChangeWeapon(CurrentWeaponInfo, InventoryItem);
 
-    // NetUpdateFrequency = 66.f;
-    // MinNetUpdateFrequency = 33.f;
+	// NetUpdateFrequency = 66.f;
+	// MinNetUpdateFrequency = 33.f;
 }
 
 // Called every frame
 void ACSNOWeaponBase::Tick(float DeltaTime) {
-    Super::Tick(DeltaTime);
+	Super::Tick(DeltaTime);
+}
+
+void ACSNOWeaponBase::StartFire() {
+	ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
+	if (CurrentClipAmmo > 0 && Player) {
+		StartFireTime = GetWorld()->TimeSeconds;
+
+		Player->SetPlayerCondition(EPlayerCondition::Shooting);
+
+		float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - StartFireTime, 0.f);
+
+		GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ACSNOWeaponBase::Fire,
+		                                TimeBetweenShots, bHasAutomaticFire, FirstDelay);
+	}
+}
+
+void ACSNOWeaponBase::StopFire() {
+	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
+	ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
+	if (Player) {
+		Player->SetPlayerCondition(EPlayerCondition::Idle);
+	}
+
 }
 
 void ACSNOWeaponBase::Reload() {
-    if (!HasAuthority()) {
-        ServerReload();
-    }
-    if (CurrentClipAmmo < MaxClipAmmo) {
-        ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
-        if (Player) {
-            Player->SetPlayerCondition(EPlayerCondition::Reloading);
-        }
-        if (MaxClipAmmo - CurrentClipAmmo <= CurrentTotalAmmo) {
-            CurrentTotalAmmo -= MaxClipAmmo - CurrentClipAmmo;
-            CurrentClipAmmo = MaxClipAmmo;
-        }
-        else if (CurrentTotalAmmo != 0) {
-            CurrentClipAmmo += CurrentTotalAmmo;
-            CurrentTotalAmmo = 0;
-        }
+	if (!HasAuthority()) {
+		ServerReload();
+	}
+	if (CurrentClipAmmo < MaxClipAmmo) {
+		ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
+		if (Player) {
+			Player->SetPlayerCondition(EPlayerCondition::Reloading);
+		}
+		if (MaxClipAmmo - CurrentClipAmmo <= CurrentTotalAmmo) {
+			CurrentTotalAmmo -= MaxClipAmmo - CurrentClipAmmo;
+			CurrentClipAmmo = MaxClipAmmo;
+		}
+		else if (CurrentTotalAmmo != 0) {
+			CurrentClipAmmo += CurrentTotalAmmo;
+			CurrentTotalAmmo = 0;
+		}
 
-    }
+	}
 }
 
 void ACSNOWeaponBase::ServerReload_Implementation() {
-    Reload();
+	Reload();
 }
 
 bool ACSNOWeaponBase::ServerReload_Validate() {
-    return true;
+	return true;
 }
 
 void ACSNOWeaponBase::ChangeWeapon(FWeaponInfo& WeaponInfo, FInventoryItem& InventoryItem) {
-    CurrentWeaponName = InventoryItem.ItemName;
-    MaxTotalAmmo = WeaponInfo.MaxTotalAmmo;
-    CurrentTotalAmmo = MaxTotalAmmo;
-    MaxClipAmmo = WeaponInfo.MaxClipAmmo;
-    CurrentClipAmmo = MaxClipAmmo;
-    RateOfFire = WeaponInfo.RateOfFire;
-    bHasAutomaticFire = WeaponInfo.bHasAutomaticFire;
-    BaseDamage = WeaponInfo.BaseDamage;
-    ActualDamage = BaseDamage;
-    ArmourPiercing = WeaponInfo.ArmourPiercing;
-    MeshComp->SetSkeletalMesh(WeaponInfo.GunMesh);
-    TPMeshComp->SetSkeletalMesh(WeaponInfo.GunMesh);
-    ShotSound = WeaponInfo.ShotSound;
-    RecoilCurve = WeaponInfo.RecoilCurve;
-    MuzzleEffect = WeaponInfo.MuzzleEffect;
-    TracerEffect =  WeaponInfo.TracerEffect;
+	CurrentWeaponName = InventoryItem.ItemName;
+	MaxTotalAmmo = WeaponInfo.MaxTotalAmmo;
+	CurrentTotalAmmo = MaxTotalAmmo;
+	MaxClipAmmo = WeaponInfo.MaxClipAmmo;
+	CurrentClipAmmo = MaxClipAmmo;
+	RateOfFire = WeaponInfo.RateOfFire;
+	bHasAutomaticFire = WeaponInfo.bHasAutomaticFire;
+	BaseDamage = WeaponInfo.BaseDamage;
+	ActualDamage = BaseDamage;
+	ArmourPiercing = WeaponInfo.ArmourPiercing;
+	MeshComp->SetSkeletalMesh(WeaponInfo.GunMesh);
+	TPMeshComp->SetSkeletalMesh(WeaponInfo.GunMesh);
+	ShotSound = WeaponInfo.ShotSound;
+	RecoilCurve = WeaponInfo.RecoilCurve;
+	MuzzleEffect = WeaponInfo.MuzzleEffect;
+	TracerEffect = WeaponInfo.TracerEffect;
 
-    if (InventoryItem.ClipAmmo >= 0 && InventoryItem.TotalAmmo >= 0) {
-        CurrentClipAmmo = InventoryItem.ClipAmmo;
-        CurrentTotalAmmo = InventoryItem.TotalAmmo;
-    }
+	if (InventoryItem.ClipAmmo >= 0 && InventoryItem.TotalAmmo >= 0) {
+		CurrentClipAmmo = InventoryItem.ClipAmmo;
+		CurrentTotalAmmo = InventoryItem.TotalAmmo;
+	}
 }
 
 // Called when the game starts or when spawned 
 void ACSNOWeaponBase::BeginPlay() {
-    Super::BeginPlay();
+	Super::BeginPlay();
 
-    ActualDamage = BaseDamage;
+	TimeBetweenShots = 60 / RateOfFire;
 
-    ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
-    if (Player) {
-        TPMeshComp->AttachToComponent(Player->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-                                      Player->GetWeaponAttachSocketName());
-    }
+	ActualDamage = BaseDamage;
+
+	ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
+	if (Player) {
+		TPMeshComp->AttachToComponent(Player->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+		                              Player->GetWeaponAttachSocketName());
+	}
 }
 
 void ACSNOWeaponBase::ServerFire_Implementation() {
-    Fire();
+	Fire();
 }
 
 bool ACSNOWeaponBase::ServerFire_Validate() {
-    return true;
+	return true;
 }
 
 void ACSNOWeaponBase::AddRecoil(ACSNOCharacter* Player) {
-    float TimeValue = LastFireTime - StartFireTime;
-    UE_LOG(LogTemp, Log, TEXT("Time Value: %s"), *FString::SanitizeFloat(TimeValue));
+	float TimeValue = LastFireTime - StartFireTime;
+	UE_LOG(LogTemp, Log, TEXT("Time Value: %s"), *FString::SanitizeFloat(TimeValue));
 
-    Player->AddControllerYawInput(RecoilCurve->GetVectorValue(TimeValue).X);
+	Player->AddControllerYawInput(RecoilCurve->GetVectorValue(TimeValue).X);
 
-    Player->AddControllerPitchInput(RecoilCurve->GetVectorValue(TimeValue).Y);
+	Player->AddControllerPitchInput(RecoilCurve->GetVectorValue(TimeValue).Y);
 }
 
 void ACSNOWeaponBase::OnRep_WeaponChange() {
-    ChangeWeapon(CurrentWeaponInfo, CurrentInventoryItem);
+	ChangeWeapon(CurrentWeaponInfo, CurrentInventoryItem);
 }
 
 void ACSNOWeaponBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(ACSNOWeaponBase, CurrentInventoryItem)
-    DOREPLIFETIME(ACSNOWeaponBase, CurrentWeaponInfo)
-    DOREPLIFETIME(ACSNOWeaponBase, CurrentClipAmmo)
-    DOREPLIFETIME(ACSNOWeaponBase, CurrentTotalAmmo)
+	DOREPLIFETIME(ACSNOWeaponBase, CurrentInventoryItem)
+	DOREPLIFETIME(ACSNOWeaponBase, CurrentWeaponInfo)
+	DOREPLIFETIME(ACSNOWeaponBase, CurrentClipAmmo)
+	DOREPLIFETIME(ACSNOWeaponBase, CurrentTotalAmmo)
 }

@@ -8,14 +8,14 @@
 
 USTRUCT()
 struct FHitScanTrace {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    UPROPERTY()
-    TEnumAsByte<EPhysicalSurface> SurfaceType;
+	UPROPERTY()
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
 
-    UPROPERTY()
-    FVector_NetQuantize TraceEnd;
+	UPROPERTY()
+	FVector_NetQuantize TraceEnd;
 };
 
 /**
@@ -23,36 +23,30 @@ public:
  */
 UCLASS()
 class CSNO_API ACSNOLineTraceWeapon : public ACSNOWeaponBase {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    virtual void StartFire() override;
-
-    virtual void StopFire()override;
 
 protected:
-    virtual void BeginPlay() override;
-    
-    virtual void Fire() override;
+	virtual void BeginPlay() override;
 
-    void PlayFireEffect(USkeletalMeshComponent* SkelMeshComp, FVector TraceEndPoint);
+	virtual void Fire() override;
 
-    void PlayImpactEffect(EPhysicalSurface SurfaceType, FVector ImpactPoint);
+	void PlayFireEffect(USkeletalMeshComponent* SkelMeshComp, FVector TraceEndPoint);
 
-    void SetVarBasedOnSurfaceType(EPhysicalSurface SurfaceType);
+	void PlayImpactEffect(EPhysicalSurface SurfaceType, FVector ImpactPoint);
 
-    UFUNCTION()
-    void OnRep_HitScanTrace();
+	void SetVarBasedOnSurfaceType(EPhysicalSurface SurfaceType);
+
+	UFUNCTION()
+	void OnRep_HitScanTrace();
 
 private:
-    FTimerHandle TimerHandle_TimeBetweenShots;
 
-    float TimeBetweenShots;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UNiagaraSystem* CurrentImpactEffect;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    UNiagaraSystem* CurrentImpactEffect;
-
-    UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)
-    FHitScanTrace HitScanTrace;
+	UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)
+	FHitScanTrace HitScanTrace;
 
 };

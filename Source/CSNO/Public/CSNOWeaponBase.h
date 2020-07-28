@@ -70,10 +70,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	virtual void StartFire() { }
+	virtual void StartFire();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	virtual void StopFire() { }
+	virtual void StopFire();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Reload();
@@ -182,6 +182,9 @@ protected:
 	bool bHasAutomaticFire;
 
 private:
+	FTimerHandle TimerHandle_TimeBetweenShots;
+
+	float TimeBetweenShots;
 
 	FName CurrentWeaponName;
 

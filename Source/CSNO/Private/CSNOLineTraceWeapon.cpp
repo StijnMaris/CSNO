@@ -15,33 +15,9 @@ static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("CSNO.DebugWeapons"), DebugWeaponDrawing,
                                                TEXT("Draw Debug Lines For Weapons"), ECVF_Cheat);
 
-void ACSNOLineTraceWeapon::StartFire() {
-	ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
-	if (CurrentClipAmmo > 0 && Player) {
-		StartFireTime = GetWorld()->TimeSeconds;
-
-		Player->SetPlayerCondition(EPlayerCondition::Shooting);
-
-		float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - StartFireTime, 0.f);
-
-		GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ACSNOLineTraceWeapon::Fire,
-		                                TimeBetweenShots, bHasAutomaticFire, FirstDelay);
-	}
-}
-
-void ACSNOLineTraceWeapon::StopFire() {
-	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
-	ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
-	if (Player) {
-		Player->SetPlayerCondition(EPlayerCondition::Idle);
-	}
-
-}
-
 void ACSNOLineTraceWeapon::BeginPlay() {
 	Super::BeginPlay();
 
-	TimeBetweenShots = 60 / RateOfFire;
 }
 
 void ACSNOLineTraceWeapon::Fire() {
