@@ -14,13 +14,19 @@ class ACSNOWeaponBase;
 class UNiagaraSystem;
 class USoundBase;
 class UCurveVector;
+class ACSNOProjectile;
+class UCurveVector;
+class USoundBase;
 
 USTRUCT(BlueprintType)
 struct FWeaponInfo : public FTableRowBase {
 	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character")
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TSubclassOf<ACSNOWeaponBase> WeaponClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<ACSNOProjectile> ProjectileClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	bool bHasAutomaticFire;
@@ -44,16 +50,46 @@ struct FWeaponInfo : public FTableRowBase {
 	USkeletalMesh* GunMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	class USoundBase* ShotSound;
+	USoundBase* ShotSound;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	class UCurveVector* RecoilCurve;
+	UCurveVector* RecoilCurve;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	UNiagaraSystem* MuzzleEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	UNiagaraSystem* TracerEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UParticleSystem* ShellEjectionEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* ReloadMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterReloadMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterReloadMontageFP;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterSwitchWeaponMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterSwitchWeaponMontageFP;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* FireMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterFireMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterFireMontageFP;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	TSubclassOf<UAnimInstance> AnimBlueprint;
 };
 
 UCLASS(Abstract)
@@ -127,16 +163,49 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	UNiagaraSystem* TracerEffect;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UParticleSystem* ShellEjectionEffect;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	USoundBase* ShotSound;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	UCurveVector* RecoilCurve;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* ReloadMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterReloadMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterReloadMontageFP;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterSwitchWeaponMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterSwitchWeaponMontageFP;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* FireMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterFireMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UAnimMontage* CharacterFireMontageFP;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	TSubclassOf<UAnimInstance> AnimBlueprint;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<ACSNOProjectile> ProjectileClass;
+
 	// UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	// TSubclassOf<UCameraShake> FireCamShake;
 
-	virtual void Fire() { }
+	virtual void Fire();
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerFire();
@@ -144,7 +213,14 @@ protected:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerReload();
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastAnimations(UAnimMontage* CharacterFPAnim, UAnimMontage* CharacterAnim,
+	                         UAnimMontage* WeaponAnim = nullptr);
+
 	virtual void AddRecoil(class ACSNOCharacter* Player);
+
+	UFUNCTION()
+	void PlayAnimations(UAnimMontage* CharacterFPAnim, UAnimMontage* CharacterAnim, UAnimMontage* WeaponAnim = nullptr);
 
 	UFUNCTION()
 	void OnRep_WeaponChange();

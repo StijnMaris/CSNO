@@ -11,16 +11,12 @@
  * 
  */
 UCLASS()
-class CSNO_API ACSNOProjectileWeapon : public ACSNOWeaponBase
-{
+class CSNO_API ACSNOProjectileWeapon : public ACSNOWeaponBase {
 	GENERATED_BODY()
 
-	protected:
+protected:
 	virtual void Fire() override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	TSubclassOf<ACSNOProjectile> ProjectileClass;
+private:
 
-	private:
-	
 };

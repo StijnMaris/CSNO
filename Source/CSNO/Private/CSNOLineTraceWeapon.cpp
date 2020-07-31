@@ -21,6 +21,8 @@ void ACSNOLineTraceWeapon::BeginPlay() {
 }
 
 void ACSNOLineTraceWeapon::Fire() {
+	Super::Fire();
+
 	if (!HasAuthority()) {
 		ServerFire();
 	}
@@ -30,8 +32,6 @@ void ACSNOLineTraceWeapon::Fire() {
 		FVector EyeLocation;
 		FRotator EyeRotation;
 		Player->GetActorEyesViewPoint(EyeLocation, EyeRotation);
-
-		//EyeLocation = Cast<ACSNOCharacter>(MyOwner)->GetPawnViewLocation();
 
 		FVector ShotDirection = EyeRotation.Vector();
 		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);

@@ -86,16 +86,22 @@ void ACSNOWeaponBase::Reload() {
 		ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
 		if (Player) {
 			Player->SetPlayerCondition(EPlayerCondition::Reloading);
+			//if (!HasAuthority()) {
+			PlayAnimations(CharacterReloadMontageFP, CharacterReloadMontage, ReloadMontage);
+			/*}
+			else {
+				MulticastAnimations(CharacterReloadMontage, ReloadMontage);
+			}*/
 		}
-		if (MaxClipAmmo - CurrentClipAmmo <= CurrentTotalAmmo) {
-			CurrentTotalAmmo -= MaxClipAmmo - CurrentClipAmmo;
-			CurrentClipAmmo = MaxClipAmmo;
-		}
-		else if (CurrentTotalAmmo != 0) {
-			CurrentClipAmmo += CurrentTotalAmmo;
-			CurrentTotalAmmo = 0;
-		}
+	}
 
+	if (MaxClipAmmo - CurrentClipAmmo <= CurrentTotalAmmo) {
+		CurrentTotalAmmo -= MaxClipAmmo - CurrentClipAmmo;
+		CurrentClipAmmo = MaxClipAmmo;
+	}
+	else if (CurrentTotalAmmo != 0) {
+		CurrentClipAmmo += CurrentTotalAmmo;
+		CurrentTotalAmmo = 0;
 	}
 }
 
@@ -119,11 +125,25 @@ void ACSNOWeaponBase::ChangeWeapon(FWeaponInfo& WeaponInfo, FInventoryItem& Inve
 	ActualDamage = BaseDamage;
 	ArmourPiercing = WeaponInfo.ArmourPiercing;
 	MeshComp->SetSkeletalMesh(WeaponInfo.GunMesh);
+	MeshComp->SetAnimInstanceClass(WeaponInfo.AnimBlueprint);
 	TPMeshComp->SetSkeletalMesh(WeaponInfo.GunMesh);
+	TPMeshComp->SetAnimInstanceClass(WeaponInfo.AnimBlueprint);
 	ShotSound = WeaponInfo.ShotSound;
 	RecoilCurve = WeaponInfo.RecoilCurve;
 	MuzzleEffect = WeaponInfo.MuzzleEffect;
 	TracerEffect = WeaponInfo.TracerEffect;
+	ShellEjectionEffect = WeaponInfo.ShellEjectionEffect;
+	ReloadMontage = WeaponInfo.ReloadMontage;
+	CharacterReloadMontage = WeaponInfo.CharacterReloadMontage;
+	CharacterReloadMontageFP = WeaponInfo.CharacterReloadMontageFP;
+	FireMontage = WeaponInfo.FireMontage;
+	CharacterFireMontage = WeaponInfo.CharacterFireMontage;
+	CharacterFireMontageFP = WeaponInfo.CharacterFireMontageFP;
+	CharacterSwitchWeaponMontage = WeaponInfo.CharacterSwitchWeaponMontage;
+	CharacterSwitchWeaponMontageFP = WeaponInfo.CharacterSwitchWeaponMontageFP;
+	ProjectileClass = WeaponInfo.ProjectileClass;
+
+	PlayAnimations(CharacterSwitchWeaponMontageFP, CharacterSwitchWeaponMontage);
 
 	if (InventoryItem.ClipAmmo >= 0 && InventoryItem.TotalAmmo >= 0) {
 		CurrentClipAmmo = InventoryItem.ClipAmmo;
@@ -154,6 +174,20 @@ bool ACSNOWeaponBase::ServerFire_Validate() {
 	return true;
 }
 
+void ACSNOWeaponBase::Fire() {
+	PlayAnimations(CharacterFireMontageFP, CharacterFireMontage, FireMontage);
+}
+
+void ACSNOWeaponBase::MulticastAnimations_Implementation(UAnimMontage* CharacterFPAnim, UAnimMontage* CharacterAnim,
+                                                         UAnimMontage* WeaponAnim) {
+	ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
+	if (Player) {
+		if (GetLocalRole() == ROLE_SimulatedProxy && !Player->IsLocallyControlled()) {
+			PlayAnimations(CharacterFPAnim, CharacterAnim, WeaponAnim);
+		}
+	}
+}
+
 void ACSNOWeaponBase::AddRecoil(ACSNOCharacter* Player) {
 	float TimeValue = LastFireTime - StartFireTime;
 	UE_LOG(LogTemp, Log, TEXT("Time Value: %s"), *FString::SanitizeFloat(TimeValue));
@@ -161,6 +195,40 @@ void ACSNOWeaponBase::AddRecoil(ACSNOCharacter* Player) {
 	Player->AddControllerYawInput(RecoilCurve->GetVectorValue(TimeValue).X);
 
 	Player->AddControllerPitchInput(RecoilCurve->GetVectorValue(TimeValue).Y);
+}
+
+void ACSNOWeaponBase::PlayAnimations(UAnimMontage* CharacterFPAnim, UAnimMontage* CharacterAnim,
+                                     UAnimMontage* WeaponAnim) {
+	if (HasAuthority()) {
+		MulticastAnimations(CharacterFPAnim, CharacterAnim, WeaponAnim);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("%s %d: PlayAnimation"), *UEnum::GetValueAsString(GetLocalRole()), GPlayInEditorID);
+
+	ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
+	if (Player) {
+		if (CharacterAnim && CharacterFPAnim) {
+			UAnimInstance* AnimInstFP = Player->GetMeshFP()->GetAnimInstance();
+			UAnimInstance* AnimInstTP = Player->GetMesh()->GetAnimInstance();
+
+			if (AnimInstFP && AnimInstTP) {
+				//if (!AnimInstFP->Montage_IsPlaying(nullptr) && !AnimInstTP->Montage_IsPlaying(nullptr)) {
+					AnimInstFP->Montage_Play(CharacterFPAnim);
+					AnimInstTP->Montage_Play(CharacterAnim);
+				//}
+
+				if (WeaponAnim && !HasAuthority()) {
+					UAnimInstance* AnimInstWeaponTP = TPMeshComp->GetAnimInstance();
+					UAnimInstance* AnimInstWeaponFP = MeshComp->GetAnimInstance();
+					
+					if (AnimInstWeaponFP && AnimInstWeaponTP) {
+						AnimInstWeaponFP->Montage_Play(WeaponAnim);
+						AnimInstWeaponTP->Montage_Play(WeaponAnim);
+					}
+				}
+			}
+		}
+	}
 }
 
 void ACSNOWeaponBase::OnRep_WeaponChange() {
