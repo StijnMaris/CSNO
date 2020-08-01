@@ -17,7 +17,7 @@ public:
 	ACSNOProjectile();
 
 	/** called when projectile hits something */
-	UFUNCTION()
+	UFUNCTION(BlueprintNativeEvent)
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse,
 	           const FHitResult& Hit);
 
@@ -30,7 +30,7 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintNativeEvent)
 	void Explode();
 
 	UFUNCTION(NetMulticast, Unreliable)
@@ -41,6 +41,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	UParticleSystem* ExplosionEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+	float Radius;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+	float Damage;
 
 private:
 
@@ -56,12 +62,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	float ImpulseVelocity;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-	float Radius;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-	float Damage;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	float ExplodeDelay;

@@ -39,13 +39,14 @@ ACSNOProjectile::ACSNOProjectile() {
 	SetReplicateMovement(true);
 }
 
-void ACSNOProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-                            FVector NormalImpulse, const FHitResult& Hit) {
+void ACSNOProjectile::OnHit_Implementation(UPrimitiveComponent* HitComp, AActor* OtherActor,
+                                           UPrimitiveComponent* OtherComp, FVector NormalImpulse,
+                                           const FHitResult& Hit) {
 	// Only add impulse and destroy projectile if we hit a physics
 	if (bExplodeOnImpact) {
+		bExplodeOnImpact = false;
 		Explode();
 	}
-
 }
 
 void ACSNOProjectile::BeginPlay() {
@@ -57,7 +58,7 @@ void ACSNOProjectile::BeginPlay() {
 	}
 }
 
-void ACSNOProjectile::Explode() {
+void ACSNOProjectile::Explode_Implementation() {
 	if (HasAuthority()) {
 		UE_LOG(LogTemp, Log, TEXT("%s %d: Projectile Exploded"), *UEnum::GetValueAsString(GetLocalRole()),
 		       GPlayInEditorID);
@@ -68,7 +69,7 @@ void ACSNOProjectile::Explode() {
 		bool ApliedDamage = UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage,
 		                                                        MeshComp->GetComponentLocation(),
 		                                                        Radius, nullptr, IgnoredActors,
-		                                                        this, GetInstigatorController(),false);
+		                                                        this, GetInstigatorController(), false);
 		PlayExplodeEffects();
 
 		if (ApliedDamage) {
@@ -76,9 +77,11 @@ void ACSNOProjectile::Explode() {
 			                false, 5.f, 0, 2.f);
 		}
 
+		GetWorldTimerManager().ClearTimer(TimerHandle_ExplodeDalay);
+
 		SetLifeSpan(0.1);
-		//Destroy();
 	}
+	MeshComp->SetVisibility(false);
 }
 
 void ACSNOProjectile::PlayExplodeEffects_Implementation() {
