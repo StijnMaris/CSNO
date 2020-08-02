@@ -8,7 +8,6 @@ void ACSNOProjectileWeapon::Fire() {
 	// try and fire a projectile
 	if (!HasAuthority()) {
 		ServerFire();
-		return;
 	}
 
 	if (ProjectileClass) {
@@ -30,7 +29,9 @@ void ACSNOProjectileWeapon::Fire() {
 					ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 				// spawn the projectile at the muzzle
-				World->SpawnActor<ACSNOProjectile>(ProjectileClass, MuzzleLocation, ShootRotation, ActorSpawnParams);
+				if (HasAuthority()) {
+					World->SpawnActor<ACSNOProjectile>(ProjectileClass, MuzzleLocation, ShootRotation, ActorSpawnParams);
+				}
 
 				FMath::Clamp(CurrentClipAmmo--, 0, MaxClipAmmo);
 
@@ -39,6 +40,8 @@ void ACSNOProjectileWeapon::Fire() {
 				}
 
 				LastFireTime = GetWorld()->TimeSeconds;
+				UE_LOG(LogTemp, Log, TEXT("%s %d: LastFireTime: %f"), *UEnum::GetValueAsString(GetLocalRole()),
+				       GPlayInEditorID, LastFireTime);
 			}
 		}
 	}

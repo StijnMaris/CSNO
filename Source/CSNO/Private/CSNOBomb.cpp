@@ -6,7 +6,6 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "CSNODefusableBomb.h"
-#include "Net/UnrealNetwork.h"
 
 ACSNOBomb::ACSNOBomb(): Super() {
     BaseDamage = 100.f;
@@ -115,8 +114,6 @@ void ACSNOBomb::SpawnDefusableBomb(AActor* Planter) {
         CollisionParams.AddIgnoredActor(Planter);
 
         DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Green, false, 1, 0, 1);
-
-        ENetMode netMode = GetNetMode();
 
         if (GetWorld()->LineTraceSingleByChannel(OutHit, StartPoint, EndPoint, ECC_WorldStatic, CollisionParams)) {
             if (OutHit.bBlockingHit) {

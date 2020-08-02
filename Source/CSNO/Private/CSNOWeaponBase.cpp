@@ -7,12 +7,14 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Particles/ParticleSystemComponent.h"
-#include "../../Engine/Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
+//#include "../../Engine/Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
 #include "../../Engine/Plugins/FX/Niagara/Source/Niagara/Public/NiagaraComponent.h"
 //#include "CSNO/Public/CSNOArmourDamageType.h"
 #include "CSNO/Public/CSNODefaultDamageType.h"
 //#include "CSNO/Public/CSNOHeadDamageType.h"
 #include "Curves/CurveVector.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogWeapon, Log, All);
 
 ACSNOWeaponBase::ACSNOWeaponBase() {
 	PrimaryActorTick.bCanEverTick = true;
@@ -63,6 +65,9 @@ void ACSNOWeaponBase::StartFire() {
 		Player->SetPlayerCondition(EPlayerCondition::Shooting);
 
 		float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - StartFireTime, 0.f);
+		
+		UE_LOG(LogWeapon, Log, TEXT("%s %d: FirstDelay: %f"), *UEnum::GetValueAsString(GetLocalRole()),
+           GPlayInEditorID,FirstDelay);
 
 		GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ACSNOWeaponBase::Fire,
 		                                TimeBetweenShots, bHasAutomaticFire, FirstDelay);
@@ -190,7 +195,7 @@ void ACSNOWeaponBase::MulticastAnimations_Implementation(UAnimMontage* Character
 
 void ACSNOWeaponBase::AddRecoil(ACSNOCharacter* Player) {
 	float TimeValue = LastFireTime - StartFireTime;
-	UE_LOG(LogTemp, Log, TEXT("Time Value: %s"), *FString::SanitizeFloat(TimeValue));
+	//UE_LOG(LogTemp, Log, TEXT("Time Value: %s"), *FString::SanitizeFloat(TimeValue));
 
 	Player->AddControllerYawInput(RecoilCurve->GetVectorValue(TimeValue).X);
 
@@ -203,7 +208,7 @@ void ACSNOWeaponBase::PlayAnimations(UAnimMontage* CharacterFPAnim, UAnimMontage
 		MulticastAnimations(CharacterFPAnim, CharacterAnim, WeaponAnim);
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("%s %d: PlayAnimation"), *UEnum::GetValueAsString(GetLocalRole()), GPlayInEditorID);
+	UE_LOG(LogWeapon, Log, TEXT("%s %d: PlayAnimation"), *UEnum::GetValueAsString(GetLocalRole()), GPlayInEditorID);
 
 	ACSNOCharacter* Player = Cast<ACSNOCharacter>(GetOwner());
 	if (Player) {
@@ -213,14 +218,14 @@ void ACSNOWeaponBase::PlayAnimations(UAnimMontage* CharacterFPAnim, UAnimMontage
 
 			if (AnimInstFP && AnimInstTP) {
 				//if (!AnimInstFP->Montage_IsPlaying(nullptr) && !AnimInstTP->Montage_IsPlaying(nullptr)) {
-					AnimInstFP->Montage_Play(CharacterFPAnim);
-					AnimInstTP->Montage_Play(CharacterAnim);
+				AnimInstFP->Montage_Play(CharacterFPAnim);
+				AnimInstTP->Montage_Play(CharacterAnim);
 				//}
 
 				if (WeaponAnim && !HasAuthority()) {
 					UAnimInstance* AnimInstWeaponTP = TPMeshComp->GetAnimInstance();
 					UAnimInstance* AnimInstWeaponFP = MeshComp->GetAnimInstance();
-					
+
 					if (AnimInstWeaponFP && AnimInstWeaponTP) {
 						AnimInstWeaponFP->Montage_Play(WeaponAnim);
 						AnimInstWeaponTP->Montage_Play(WeaponAnim);
