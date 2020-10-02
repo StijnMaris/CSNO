@@ -52,6 +52,8 @@ void ACSNOLineTraceWeapon::Fire() {
 
 			SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
+			SetVarBasedOnSurfaceType(SurfaceType);
+
 			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit,
 			                                   Player->GetInstigatorController(), this, DamageType);
 
@@ -137,7 +139,7 @@ void ACSNOLineTraceWeapon::SetVarBasedOnSurfaceType(EPhysicalSurface SurfaceType
 
 	case SURFACE_FLESH_HEAD: {
 		CurrentImpactEffect = FleshImpactEffect;
-		ActualDamage *= 4.f;
+		ActualDamage *= 5.f;
 		break;
 	}
 
